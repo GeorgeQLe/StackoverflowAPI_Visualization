@@ -22,7 +22,8 @@ class Bagofwords:
     def create_final_list(self, vocabulary, corpus):
         scores = {}
         for word in vocabulary:
-            scores[word] = self.__tfidf(word, corpus)
+            if word.isdigit() == False:
+                scores[word] = self.__tfidf(word, corpus)
         return scores
 
     def tokenize_corpus(self, corpus):

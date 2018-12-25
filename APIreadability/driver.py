@@ -2,32 +2,46 @@
 #
 # Pulling information from Stack Overflow
 # Bag of Words
-
 from bagofwords import Bagofwords
-from questionretrieval import get_API_name, get_search_term_from_user, parse_questions, parse_links, prompt_for_continue, query_stackoverflow_for_questions
+from questionretrieval import get_API_name, get_start_date, get_end_date, get_search_term_from_user, parse_questions, parse_links, prompt_for_continue, query_stackoverflow_for_questions
+from impasse import json_dump
 
 import collections
-import json
-import os
+import sys
 
 def main():
+
     continue_program = 1
+    counter_searches = 0
+
     while continue_program != -1:
+        counter_searches+= 1
         API = get_API_name()
 
         questions = query_stackoverflow_for_questions(API)
         
+        # parses the questions from the dictionary obtained from stackoverflow
+        # parsed_questions is a dictionary that maps the title of the question
+        # to the full question
         parsed_questions = parse_questions(questions)
+        
+        for question in parsed_questions:
+            print(question)
 
+        # parses the links from the dictionary obtained from stackoverflow
+        # links is a dictionary that maps the title of the question to the
+        # link to the question
         links = parse_links(questions)
-        for link_title in links.keys():
-            print(link_title, ": ", links[link_title])
 
-        # performs a bag of words algorithm on the corpus of questions
         bw = Bagofwords()
-        # 
+        # Parses the corpus to collect all of the invdividual terms and stores it 
+        # into a vocabulary. This vocabulary is a list of strings
         vocabulary = bw.tokenize_corpus(parsed_questions)
         print("Sorting")
+        # Performs a bag of words algorithm on the corpus of questions based on all of the 
+        # terms of the vocabulary.
+        # Returns a dictionary which maps a term in the vocabulary to another dictionary
+        # which maps a corresponding 
         list_of_scores = bw.create_final_list(vocabulary, parsed_questions)
 
         # for scores in list_of_scores.keys():
@@ -38,25 +52,15 @@ def main():
             list_of_score_titles[score_title] = len(list_of_scores[score_title])
         list_of_score_titles_sorted = collections.OrderedDict(sorted(list_of_score_titles.items(), key = lambda t : t[1], reverse = True))
 
-        for score_title in list_of_score_titles_sorted.keys():
-            print(score_title, " ", list_of_score_titles_sorted[score_title])
-        print("Finish Sort")
-
         list_of_questions_sorted = collections.OrderedDict()
         for score_title in list_of_score_titles_sorted.keys():
             list_questions = []
             for question in list_of_scores[score_title].keys():
                 list_questions.append(question)
             list_of_questions_sorted[score_title] = list_questions
+        print("Finish Sort")
 
-        for score_title in list_of_questions_sorted.keys():
-            print(score_title, ": ", list_of_questions_sorted[score_title])
-            
-        with open('links_results.json', 'w') as fp:
-            json.dump(links, fp)
-        
-        with open('questions_results.json', 'w') as fp:
-            json.dump(list_of_questions_sorted, fp)
+        json_dump(API, links, list_of_questions_sorted)
 
         # reset continue_program if needed
         if continue_program != 1:
@@ -65,12 +69,12 @@ def main():
         while continue_program != 0 and continue_program != -1:
             search_term = get_search_term_from_user()
 
-            if len(list_of_questions_sorted[search_term]) == 0:
-                print("There are no relevant questions on stack overflow for you to look at!")
+            if search_term in list_of_questions_sorted:
+                    print ("There are", len(list_of_questions_sorted[search_term]), "relevant questions to", search_term, "\b.")
+                    for score_title in list_of_questions_sorted[search_term]:
+                        print(score_title, ": ", links[score_title])
             else:
-                print ("There are", len(list_of_questions_sorted[search_term]), "relevant questions to", search_term, "\b.")
-                for score_title in list_of_questions_sorted[search_term]:
-                    print(score_title, ": ", links[score_title])
+                print("There are no relevant questions on stack overflow")
 
             continue_program = prompt_for_continue()
 

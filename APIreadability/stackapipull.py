@@ -3,12 +3,19 @@
 from stackapi import StackAPI
 from datetime import datetime
 
-def get_stored_questions(API_name):
-    site = StackAPI('stackoverflow') 
+class Date():
+
+    def __init__(self, day = 1, month = 1, year = 1970):
+        self.day = day
+        self.month = month
+        self.year = year
+
+def get_stored_questions(API_name, Start_date = Date(1, 1, 2010), End_date = Date(12, 18, 2018)):
+    site = StackAPI('stackoverflow')
 
     site.max_pages = 1 
 
-    questions = site.fetch('questions', fromdate=datetime(2017, 9, 1), todate=datetime(2018, 9, 7), tagged=API_name) 
+    questions = site.fetch('questions', fromdate=datetime(2010, 1, 1), todate=datetime(2018, 12, 18), tagged=API_name) 
 
     stored_quest = dict()
     stored_quests = list()
