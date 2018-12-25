@@ -2,12 +2,13 @@
 
 import numpy as np
 import re # regular expressions
+from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 class Bagofwords:
 
     # default class constructor
     def __init__(self):
-        self.__ignore_words = []
+        self.__ignore_words = ENGLISH_STOP_WORDS
 
     def add_ignore_words(self, new_ignore_words):
         for word in new_ignore_words:

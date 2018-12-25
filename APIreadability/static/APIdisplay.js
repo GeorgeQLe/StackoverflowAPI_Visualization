@@ -1,5 +1,62 @@
 var current_data = null;
 var link_ids = null;
+var largest_stored_key = null;
+
+function sort_list(data_arrays) {
+    var largest_array_size = 0;
+    var largest_key = [];
+    var legacy_largest_key = [];
+    current_data["1"] = [];
+    var data_size = 0;
+    var current_data_size = 0;
+    var first_time = true;
+    for(var key in data_arrays) {
+        data_size++;
+    }
+    while(current_data_size <= data_size) {
+        for(var key in data_arrays) {
+            if(find_in_legacy_list(legacy_largest_key, key) == false) {
+                console.log(data_arrays[key].length);
+                if(data_arrays[key].length > largest_array_size) {
+                    // checks to see if the current key is already stored
+                    // keeps track of the new largest array size
+                    largest_array_size = data_arrays[key].length;
+                    // empty the array of largest keys
+                    largest_key = [];
+                    if(first_time) {
+                        largest_stored_key = key;
+                    }
+                    // push the new largest key into the array
+                    largest_key.push(key);
+                }
+                else if(data_arrays[key].length == largest_array_size) {
+                    for(var legacy_key in legacy_largest_key) {
+                        if(key == legacy_largest_key[legacy_key]) {
+                            break;
+                        }
+                    }
+                    // push the key that is tied with the current largest
+                    largest_key.push(key);
+                }
+            }
+        }
+        for(var key in largest_key) {
+            legacy_largest_key.push(largest_key[key]);
+            current_data_size++;
+            current_data["1"][largest_key[key]] = data_arrays[largest_key[key]];
+        }
+        largest_array_size = 0;
+    }
+}
+
+function find_in_legacy_list(list, current_key) {
+    for(var legacy_key in list) {
+        if(current_key == list[legacy_key]) {
+            return true;
+        }
+    }
+    return false;
+}
 
 function create_list() {
     var search = document.getElementById("name").value;
@@ -11,7 +68,10 @@ function create_list() {
     $.getJSON("http://127.0.0.1:5000/search_api", {
         API: search
     }, function(data) {
-        current_data = data;
+        console.log(data);
+        current_data = {};
+        current_data["0"] = data["0"];
+        sort_list(data["1"]);
         display_all();
         display_all();
 
@@ -124,8 +184,4 @@ function set_links(ID, text) {
     document.getElementById(ID).style.paddingRight = "15px";
     document.getElementById(ID).innerHTML = text.link(text);
     document.getElementById(ID).style.display = "block";
-}
-
-function set_collapsibles() {
-
 }
